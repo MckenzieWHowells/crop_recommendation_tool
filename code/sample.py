@@ -1,33 +1,52 @@
-import random
+    """
+    Crop Recommender System
+    This script trains a machine learning model to recommend crops based on soil and climate data.
+    """
 
-# Sample dataset
-catalogue = [
-    {"title": "Stranger Things", "genre": "sci-fi", "mood": "exciting", "platform": "Netflix"},
-    {"title": "The Crown", "genre": "drama", "mood": "serious", "platform": "Netflix"},
-    {"title": "Brooklyn Nine-Nine", "genre": "comedy", "mood": "light", "platform": "Peacock"},
-    {"title": "The Mandalorian", "genre": "sci-fi", "mood": "exciting", "platform": "Disney+"},
-    {"title": "Fleabag", "genre": "comedy", "mood": "thoughtful", "platform": "Amazon Prime"},
-    {"title": "Planet Earth", "genre": "documentary", "mood": "calm", "platform": "Netflix"},
-    {"title": "Breaking Bad", "genre": "drama", "mood": "intense", "platform": "Netflix"},
-    {"title": "The Office", "genre": "comedy", "mood": "light", "platform": "Peacock"},
-]
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+import joblib
+import os
 
-# Input collection
-print("Welcome to the Watch Recommendation Engine!\n")
-genre = input("Choose a genre (e.g., comedy, drama, sci-fi, documentary): ").strip().lower()
-mood = input("What mood are you in? (e.g., light, exciting, calm, serious, intense): ").strip().lower()
-platform = input("Preferred streaming platform (e.g., Netflix, Disney+, Amazon Prime, Peacock): ").strip()
+df = pd.read_csv("crop_data.csv")
 
-# Filtering logic
-recommendations = [
-    item for item in catalogue
-    if item["genre"] == genre and item["mood"] == mood and item["platform"].lower() == platform.lower()
-]
+X = df.drop("label", axis=1)  # Features
+y = df["label"]               # Target (crop)
 
-# Result
-if recommendations:
-    choice = random.choice(recommendations)
-    print(f"\n🎬 You should watch: **{choice['title']}** on {choice['platform']}")
-else:
-    print("\n😕 Sorry, no exact matches found. Try changing your inputs!")
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+# Define relative path to models folder (now under code/)
+model_path = "models/crop_recommender.pkl"
+
+# Ensure the directory exists
+os.makedirs(os.path.dirname(model_path), exist_ok=True)
+
+# Save the model
+joblib.dump(model, model_path)
+print(f"✅ Model trained and saved to: {model_path}")
+
+# Optional: Test accuracy
+accuracy = model.score(X_test, y_test)
+print(f"Model accuracy: {accuracy:.2%}")
+
+# Step 6: Predict (Example)
+def recommend_crop():
+    print("\nEnter your soil and climate data:")
+    n = float(input("Nitrogen (N): "))
+    p = float(input("Phosphorus (P): "))
+    k = float(input("Potassium (K): "))
+    temp = float(input("Temperature (°C): "))
+    humidity = float(input("Humidity (%): "))
+    ph = float(input("pH level: "))
+    rainfall = float(input("Rainfall (mm): "))
+
+    input_data = [[n, p, k, temp, humidity, ph, rainfall]]
+    crop = model.predict(input_data)[0]
+    print(f"\n🌱 Recommended crop: **{crop.title()}**")
+
+# Run prediction
+recommend_crop()
