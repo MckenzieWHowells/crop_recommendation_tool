@@ -1,13 +1,15 @@
-    """
-    Crop Recommender System
-    This script trains a machine learning model to recommend crops based on soil and climate data.
-    """
+"""
+Crop Recommender System
+This script trains a machine learning model to recommend crops based on soil and climate data.
+"""
 
+import os
+import time
+import json
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 import joblib
-import os
 
 df = pd.read_csv("crop_data.csv")
 
@@ -19,19 +21,33 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 model = RandomForestClassifier(n_estimators=100, random_state=42)
 model.fit(X_train, y_train)
 
-# Define relative path to models folder (now under code/)
-model_path = "models/crop_recommender.pkl"
+timestamp = int(time.time())
+
+# Define relative path to models folder
+model_path = f"models/crop_recommender_{timestamp}.pkl"
 
 # Ensure the directory exists
 os.makedirs(os.path.dirname(model_path), exist_ok=True)
 
 # Save the model
 joblib.dump(model, model_path)
-print(f"✅ Model trained and saved to: {model_path}")
+print(f"Model trained and saved to: {model_path}")
 
-# Optional: Test accuracy
 accuracy = model.score(X_test, y_test)
 print(f"Model accuracy: {accuracy:.2%}")
+
+# Save metadata
+metadata = {
+    "timestamp": timestamp,
+    "accuracy": round(accuracy * 100, 2),
+    "model_path": model_path
+}
+
+json_path = model_path.replace(".pkl", ".json")
+with open(json_path, "w") as f:
+    json.dump(metadata, f, indent=2)
+
+print(f"Metadata saved: {json_path}")
 
 # Step 6: Predict (Example)
 def recommend_crop():
@@ -46,7 +62,12 @@ def recommend_crop():
 
     input_data = [[n, p, k, temp, humidity, ph, rainfall]]
     crop = model.predict(input_data)[0]
-    print(f"\n🌱 Recommended crop: **{crop.title()}**")
+    print(f"\nRecommended crop: **{crop.title()}**")
 
-# Run prediction
+if __name__ == "__main__":
+    # Load the model
+    model = joblib.load(model_path)
+    print("Model loaded successfully.")
+    
+    # Example usage
 recommend_crop()
