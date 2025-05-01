@@ -12,7 +12,7 @@ from sklearn.ensemble import RandomForestClassifier
 import joblib
 
 MODEL_DIR = "models"
-DATA_PATH = "crop_recommendation_dataset_kaggle.csv"
+DATA_PATH = "data/crop_recommendation_dataset_kaggle.csv"
 
 
 def load_data(filepath: str):
